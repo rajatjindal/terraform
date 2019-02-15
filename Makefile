@@ -6,9 +6,11 @@ WEBSITE_REPO=github.com/hashicorp/terraform-website
 default: test
 
 tools:
+	echo "Installing tools..."
 	GO111MODULE=off go get -u golang.org/x/tools/cmd/stringer
 	GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
 	GO111MODULE=off go get -u github.com/golang/mock/mockgen
+	echo "Tools installed."
 
 # bin generates the releaseable binaries for Terraform
 bin: fmtcheck generate
@@ -50,12 +52,14 @@ e2etest: generate
 	TF_ACC=1 go test -mod=vendor -v ./command/e2etest
 
 test-compile: fmtcheck generate
+	echo "Running test-compile..."
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
 		echo "  make test-compile TEST=./builtin/providers/test"; \
 		exit 1; \
 	fi
 	go test -mod=vendor -c $(TEST) $(TESTARGS)
+	echo "test-compile done."
 
 # testrace runs the race checker
 testrace: fmtcheck generate
@@ -73,13 +77,17 @@ cover:
 # source files, except the protobuf stubs which are built instead with
 # "make protobuf".
 generate: tools
-	GOFLAGS=-mod=vendor go generate ./...
+	echo "Running go generate..."
+	GOFLAGS=-mod=vendor go generate -v ./...
+	echo "go generate done."
 	# go fmt doesn't support -mod=vendor but it still wants to populate the
 	# module cache with everything in go.mod even though formatting requires
 	# no dependencies, and so we're disabling modules mode for this right
 	# now until the "go fmt" behavior is rationalized to either support the
 	# -mod= argument or _not_ try to install things.
+	echo "Running go fmt..."
 	GO111MODULE=off go fmt command/internal_plugin_list.go > /dev/null
+	echo "go fmt done."
 
 # We separate the protobuf generation because most development tasks on
 # Terraform do not involve changing protobuf files and protoc is not a
